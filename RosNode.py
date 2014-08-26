@@ -3,9 +3,6 @@
 import types
  
 from rosObjects import subscriber, publisher, node
-#execfile('/home/sorin/roswork_FRSC2014/src/EnhanceRosNode/rosObjects.py')
-
-
 
 class topicHandler:
     
@@ -20,36 +17,7 @@ class topicHandler:
         else:
             print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type))
  
-    def correctArgs(self,allowedParams, args ):
-        correct_param = True
-        if len(args) == len(allowedParams):
-            for k in allowedParams:
-                if k not in args:
-                    correct_param = False
-            if correct_param is False :
-                print "error: incorrect parameters provided for subscribe, expected: ", allowedParams
-
-        else:
-            print "error: incorrect number of parameters provided for subscribe"
-            correct_param = False
-        
-        return correct_param
-        
-    #the only function
-    #def subscribe(self, **kwargs):
-        #print "subscribe"
-        
-     #   if self.subsDict['type']=='reuse':
-     #       allowedParams = ['topic']
-     #   else: #'new'
-     #       allowedParams = ['topic', 'handler', 'msgType']
-        
-     #   if self.correctArgs(allowedParams, kwargs):
-            
-     #       topic = kwargs['topic']
-     #       handler = kwargs['handler']
-     #       msgType = kwargs['msgType']
-
+ 
     def subscribe(self,topic,handler = None, msgType = None):    
        
         self.subsDict['name']=topic
@@ -72,7 +40,6 @@ class topicHandler:
 
         return self   
   
-    #the only function
     def publish(self,topic, msgType = None):
               
         self.publDict['name']=topic
@@ -122,7 +89,6 @@ class rosNode:
      
     def __createNewPublishers(self):
         for item in self.new.publishTopics:
-            #print item
             if item is None:
                 print"error: empty list of new publishers"
                 return
@@ -135,13 +101,10 @@ class rosNode:
             pub.pub= hnd
             pair = {'publisher':pub,'topic':topic}
             self.publisher.append(pair) 
-                       
-        #self.publHandler = {'Topic': None,'Handler': None}
-            
+                                   
     
     def __createNewSubscribers(self):
         for item in self.new.subscribeTopics:
-            #print item
             if item == None:
                 print"error: empty list of new publishers"
                 return
@@ -156,8 +119,7 @@ class rosNode:
             
             pair = {'subscriber':subs,'topic':topic} 
             self.subscriber.append(pair)                                   
-            #self.subsDict = {'name': None,'fn': None,'type':type}       
-    
+     
     def __relayPublishers(self):
         for i in self.reuse.publishTopics:
             print i
