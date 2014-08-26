@@ -1,6 +1,8 @@
 #!/usr/bin/python
  
 import types
+
+from rospy.msg import AnyMsg
  
 from rosObjects import subscriber, publisher, node
 
@@ -16,7 +18,14 @@ class topicHandler:
             self.subsDict['type'] = type
         else:
             print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type))
+    def genRelayTopic(self,topic):
+        return 'relay_' + topic
  
+    def relayFn(self,data):
+        pub = publisher()
+        outTopic = self.genRelayTopic(self.subsDict['name'])
+        pub.registerToPublish(outTopic, AnyMsg)
+        pub.write(data)
  
     def subscribe(self,topic,handler = None, msgType = None):    
        
@@ -34,6 +43,7 @@ class topicHandler:
             if msgType is None or handler is None:
                 print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
                 print "topic: ", topic
+                self.subsDict['msg']=AnyMsg
 
         elem = self.subsDict.copy()
         self.subscribeTopics.append(elem)
@@ -53,7 +63,8 @@ class topicHandler:
         else: 
             if msgType is not None:
                 print ("error: publish reuse has no msgType; provided: {} ".format(msgType))       
-
+            self.publDict['msg'] = AnyMsg
+            
         elem = self.publDict.copy()
         self.publishTopics.append(elem)
 
@@ -121,12 +132,28 @@ class rosNode:
             self.subscriber.append(pair)                                   
      
     def __relayPublishers(self):
-        for i in self.reuse.publishTopics:
-            print i
-    
+        for item in self.reuse.publishTopics:
+            #print item
+            #AnyMsg
+            pass
+            
     def __relaySubscribers(self):
-        for i in self.reuse.subscribeTopics:
-            print i
+        for item in self.reuse.subscribeTopics:
+            #print item
+            
+            topic = item['name']
+            fn = self.reuse.relayFn
+            msg = AnyMsg
+            #msg = item['msg']
+            
+            subs = subscriber()
+            subs.registerReadFn(fn)
+            print "debug: ", topic, msg
+            subs.subscribeTo(topic, msg)
+            
+            pair = {'subscriber':subs,'topic':topic} 
+            self.subscriber.append(pair)                                   
+
     
     def create(self):
         self.node.createNode(self.newRosNodeName)         

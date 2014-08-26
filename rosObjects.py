@@ -17,8 +17,7 @@ Created on Sat Aug 23 09:21:10 2014
 
 import rospy
 
-#import multiprocessing
-#import threading
+
 
 class subscriber():
     def __init__(self):
