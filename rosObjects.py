@@ -42,6 +42,12 @@ class subscriber():
     
     #def unsubscribe(self):
         #rospy.Subscriber.unregister(self)
+    
+    def printSubs(self):
+        print   "\nSubscribed topic : ", self.subscribedTopic, \
+                "\nSubscribed msg type  : ", self.subscribedMsgType, \
+                "\nCallback fn  : ", self.callBackFn, \
+ 
      
 class publisher():
     def __init__(self):
@@ -53,7 +59,7 @@ class publisher():
         self.publishingTopic = topic
         self.publishingMsgType = msgType
         self.handler = rospy.Publisher(self.publishingTopic, self.publishingMsgType)
-        return self.pub
+        return self.handler
    
     def write(self,data):
         self.handler.publish(data)
@@ -61,17 +67,26 @@ class publisher():
     #def unsubscribe(self):
         #self.handler.unregister()
 
+    def printPubl(self):
+        print   "\nPublish to topic : ", self.publishingTopic, \
+                "\nPublish msg type  : ", self.publishingMsgType, \
+                "\nPublish handler  : ", self.handler, \
+
         
 class node():
     def __init__(self):
          self.nodeRunFn = None    
+         self.nodeName = ''
     
     def createNode(self,nodeName):
         rospy.init_node(nodeName, )
         
     def registerRunFn(self,fn):
         self.nodeRunFn = fn
-        
+ 
+    def printNode(self):
+        print   "\nNode name : ", self.nodeName, \
+       
     def loop(self):
       
         #self.createNode('test')

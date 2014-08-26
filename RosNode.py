@@ -15,83 +15,82 @@ class topicHandler:
         self.subsDict = {'name': None,'fn': None,'msg':None,'type':type}
         self.publDict = {'name': None,'msg': None,'type':type}
 
-        self.nextValidCall = None
-        self.passedData = None
-        #re-mapping method calls to variables
-        self.Publish = self.publish()
-        self.Subscribe = self.subscribe()
         if type == 'reuse' or type == 'new':
             self.subsDict['type'] = type
         else:
             print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type))
-            
-    
-    #aid method used to force a specific call after
-    def setNext(self,nextValidCall,data = None):
-        self.nextValidCall = nextValidCall
-        self.passedData = data
-    
-    #aid method used to force a specific call after    
-    def isValidCall(self,crtCall):
-        isValid = (self.nextValidCall == crtCall)
-        if not isValid:
-            print ('error: expected previous call {} instead of {}'.format(self.nextValidCall, crtCall))
-        self.nextValidCall = None  #reset variable, function called
-        return isValid
-    
-    def subscribe(self):
-        self.setNext("topic","subscribe")
-        #print "subscribe"
-        return self
-    
-    def handler(self,fn):
-        
-        self.subsDict['fn']=fn
-        #if self.subsDict['type']=='new':
-        #    elem = self.subsDict.copy()
-        #    self.subscribeTopics.append(elem)
-        #else:
-        #    print("error: register a handler available only for '''new''', not for ''''{}'''".format(self.subsDict['type']) )
+ 
+    def correctArgs(self,allowedParams, args ):
+        correct_param = True
+        if len(args) == len(allowedParams):
+            for k in allowedParams:
+                if k not in args:
+                    correct_param = False
+            if correct_param is False :
+                print "error: incorrect parameters provided for subscribe, expected: ", allowedParams
 
-        return self
-    
-    def msgType(self,msg):
-
-        self.publDict['msg']=msg
-        if self.publDict['type']=='new':
-            elem = self.publDict.copy()
-            self.publishTopics.append(elem)
         else:
-            print("error: register a message type available only for '''new''', not for ''''{}'''".format(self.publDict['type']) )
-
-        return self
-    
-    def publish(self):
-        self.setNext("topic","publish")
-        return self
-    
-    def topic(self, topicName):
-        if not self.isValidCall("topic"):
-            return self
+            print "error: incorrect number of parameters provided for subscribe"
+            correct_param = False
         
-        if self.passedData == "subscribe":
-            self.subsDict['name']=topicName
-            if self.subsDict['type']=='reuse':
-                elem = self.subsDict.copy()
-                self.subscribeTopics.append(elem)
-        elif self.passedData == "publish":
-            self.publDict['name']=topicName
-            if self.publDict['type']=='reuse':
-                elem = self.publDict.copy()
-                self.publishTopics.append(elem)
+        return correct_param
+        
+    #the only function
+    #def subscribe(self, **kwargs):
+        #print "subscribe"
+        
+     #   if self.subsDict['type']=='reuse':
+     #       allowedParams = ['topic']
+     #   else: #'new'
+     #       allowedParams = ['topic', 'handler', 'msgType']
+        
+     #   if self.correctArgs(allowedParams, kwargs):
+            
+     #       topic = kwargs['topic']
+     #       handler = kwargs['handler']
+     #       msgType = kwargs['msgType']
+
+    def subscribe(self,topic,handler = None, msgType = None):    
+       
+        self.subsDict['name']=topic
+        self.subsDict['fn']= handler
+        self.subsDict['msg']=msgType
+        
+        if self.subsDict['type']=='reuse':
+            if msgType is not None or handler is not None:
+                print ("error: subscribe reuse should have a handler and a msgType provided: ")       
+                print "topic: ", topic
+            
+        else:
+       
+            if msgType is None or handler is None:
+                print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
+                print "topic: ", topic
+
+        elem = self.subsDict.copy()
+        self.subscribeTopics.append(elem)
+
+        return self   
+  
+    #the only function
+    def publish(self,topic, msgType = None):
+              
+        self.publDict['name']=topic
+        self.publDict['msg']=msgType
+        
+        if self.publDict['type']=='new':
+            
+            if msgType == None:
+                print ("error: publish new should have a msgType provided: ")       
+            
         else: 
-            print ("error: expected topic passed data subscribe or published but received {} ".format(self.passedData))
-        self.passedData = None
-        
-        return self
+            if msgType is not None:
+                print ("error: publish reuse has no msgType; provided: {} ".format(msgType))       
 
- #     "\n(next val. call)   : ", self.nextValidCall, \
- #     "\n(passed data)      : ", self.passedData 
+        elem = self.publDict.copy()
+        self.publishTopics.append(elem)
+
+        return self
 
 
 class rosNode:
@@ -106,11 +105,7 @@ class rosNode:
         self.publisher = []
         self.subscriber = []
         self.publHandler = {'Topic': None,'Handler': None}
-        self.node = node()
-        #remapping method calls to variables
-        #self.Publish = self.publish()
-        #self.Subscribe = self.subscribe()
-         
+        self.node = node()        
         
 
     def __init__(self, newRosNodeName):
@@ -128,7 +123,7 @@ class rosNode:
     def __createNewPublishers(self):
         for item in self.new.publishTopics:
             #print item
-            if item == None:
+            if item is None:
                 print"error: empty list of new publishers"
                 return
             

@@ -41,44 +41,19 @@ def myNewRun():
 nd.basePackage("NodePackage")\
   .baseNode("BaseNode") 
   
-#(
-#nd.Subscribe.topic("iTopic1")
-#  .Subscribe.topic("iTopic2")
-#  .Publish.topic("oTopic1") 
-#  .Publish.topic("oTopic2")
-#)
-  
-#nd.printNode()  
-  
-[
-nd.reuse.subscribe().topic("irTopic1")
-        .subscribe().topic("irTopic2")
-        .publish().topic("orTopic1")
-        .publish().topic("orTopic2")
-]
+{
+nd.reuse.subscribe(topic = "irTopic1")
+        .subscribe(topic = "irTopic2")
+        .publish(topic = "orTopic1")
+        .publish(topic = "orTopic2")
+}
 
-[
-nd.new.subscribe().topic("inTopic1").handler(myFn1,String).msgType(String)
-      .subscribe().topic("inTopic2").handler(myFn2,String).msgType(String)
-      #.subscribe().topic("inTopic3") #to do: generate error (handler not called)
-      .publish().topic("onTopic1").msgType(String)
-      .publish().topic("onTopic2").msgType(String)
-      #.publish().topic("onTopic2").msgType(String) #to do: generate error (msgType not called)
-]
-
-#{
-#nd.reuse.subscribe(topic = "irTopic1")
-#        .subscribe(topic = "irTopic2")
-#        .publish(topic = "orTopic1")
-#        .publish(topic = "orTopic2")
-#}
-
-#{
-#nd.new.subscribe(topic = "inTopic1",handler = myFn1,msgType = String)
-#      .subscribe(topic = "inTopic2",handler = myFn2,msgType = String)
-#      .publish(topic = "onTopic1", msgType = String)
-#      .publish(topic = "onTopic2", msgType = String)
-#}
+{
+nd.new.subscribe(topic = "inTopic1",handler = myFn1,msgType = String)
+      .subscribe(topic = "inTopic2",handler = myFn2,msgType = String)
+      .publish(topic = "onTopic1", msgType = String)
+      .publish(topic = "onTopic2", msgType = String)
+}
 
 nd.create()
 
