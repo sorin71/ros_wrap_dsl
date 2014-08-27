@@ -43,15 +43,15 @@ nd.basePackage("NodePackage")\
   .baseNode("BaseNode") 
   
 {
-nd.reuse.subscribe(topic = "irTopic1")
-        .subscribe(topic = "irTopic2")
-        .publish(topic = "orTopic1")
-        .publish(topic = "orTopic2")
+nd.reuse.subscribe(topic = "irTopic1",msgType = String)
+        .subscribe(topic = "irTopic2",msgType = String)
+        .publish(topic = "orTopic1",msgType = String)
+        .publish(topic = "orTopic2",msgType = String)
 }
 
 {
-nd.new.subscribe(topic = "inTopic1",handler = myFn1,msgType = String)
-      .subscribe(topic = "inTopic2",handler = myFn2,msgType = String)
+nd.new.subscribe(topic = "inTopic1",handler = myFn1, msgType = String)
+      .subscribe(topic = "inTopic2",handler = myFn2, msgType = String)
       .publish(topic = "onTopic1", msgType = String)
       .publish(topic = "onTopic2", msgType = String)
 }
@@ -60,4 +60,4 @@ nd.create()
 
 #nd.onTopic("onTopic1").publish("test message")
   
-nd.printNode()
+#nd.printNode()

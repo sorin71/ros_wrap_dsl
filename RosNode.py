@@ -3,6 +3,7 @@
 import types
 
 from rospy.msg import AnyMsg
+#from std_msgs.msg import String
  
 from rosObjects import subscriber, publisher, node
 #reload(subscriber)
@@ -14,22 +15,15 @@ class topicHandler:
     def __init__(self, type):
         self.subscribeTopics = []
         self.publishTopics = []
+        #self.relayHandler = None
         self.subsDict = {'name': None,'fn': None,'msg':None,'type':type}
         self.publDict = {'name': None,'msg': None,'type':type}
 
         if type == 'reuse' or type == 'new':
             self.subsDict['type'] = type
         else:
-            print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type))
-    def genRelayTopic(self,topic):
-        return 'relay_' + topic
- 
-    def relayFn(self,data):
-        pub = publisher()
-        outTopic = self.genRelayTopic(self.subsDict['name'])
-        pub.registerToPublish(outTopic, AnyMsg)
-        pub.write(data)
- 
+            print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type)) 
+
     def subscribe(self,topic,handler = None, msgType = None):    
        
         self.subsDict['name']=topic
@@ -37,15 +31,15 @@ class topicHandler:
         self.subsDict['msg']=msgType
         
         if self.subsDict['type']=='reuse':
-            if msgType is not None or handler is not None:
+            #if msgType is not None or handler is not None:
+            if  handler is not None:
                 print ("error: subscribe reuse should have a handler and a msgType provided: ")       
                 print "topic: ", topic
-            self.subsDict['msg']=AnyMsg #prepare message for relaying
-        else:
-       
-            if msgType is None or handler is None:
-                print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
-                print "topic: ", topic
+            #self.subsDict['msg']=AnyMsg #prepare message for relaying
+               
+        elif msgType is None or handler is None:
+            print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
+            print "topic: ", topic
             
 
         elem = self.subsDict.copy()
@@ -63,10 +57,10 @@ class topicHandler:
             if msgType == None:
                 print ("error: publish new should have a msgType provided: ")       
             
-        else: 
-            if msgType is not None:
-                print ("error: publish reuse has no msgType; provided: {} ".format(msgType))       
-            self.publDict['msg'] = AnyMsg
+        #else: 
+            #if msgType is not None:
+            #    print ("error: publish reuse has no msgType; provided: {} ".format(msgType))       
+            #self.publDict['msg'] = AnyMsg
             
         elem = self.publDict.copy()
         self.publishTopics.append(elem)
@@ -100,6 +94,10 @@ class rosNode:
     def baseNode(self, baseRosNodeName):
         self.baseRosNodeName = baseRosNodeName
         return self 
+    
+    def genRelayTopic(self,topic):
+        return 'relay_' + topic
+
      
     def __createNewPublishers(self):
         for item in self.new.publishTopics:
@@ -143,19 +141,23 @@ class rosNode:
     def __relaySubscribers(self):
         for item in self.reuse.subscribeTopics:
             #print item
-            
-            topic = item['name']
-            fn = self.reuse.relayFn
-            #msg = AnyMsg
-            msg = item['msg']
-            
             subs = subscriber()
-            subs.registerReadFn(fn)
-            print "debug: ", topic, msg
-            subs.subscribeTo(topic, msg)
+            publ = publisher()
+                             
+            subsTopic = item['name']
+            publTopic = self.genRelayTopic(subsTopic)
+            msg = item['msg']
+            fn = publ.relayFn
             
-            pair = {'subscriber':subs,'topic':topic} 
-            self.subscriber.append(pair)                                   
+            
+            publHandler = publ.registerToPublish(publTopic, msg)
+            #publTopic.setRelayPublHandler
+            subs.registerReadFn(fn)
+            print "debug: ", publTopic, msg, fn
+            subs.subscribeTo(subsTopic, msg)
+            
+            dictItems = {'subscriber':subs,'topic':subsTopic, 'out_topic':publTopic} 
+            self.subscriber.append(dictItems)                                   
 
     
     def create(self):
