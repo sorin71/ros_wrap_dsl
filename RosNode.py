@@ -24,7 +24,7 @@ class topicHandler:
         else:
             print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type)) 
 
-    def subscribe(self,topic,handler = None, msgType = None):    
+    def subscribe(self,topic,handler = None, msgType = None ):    
        
         self.subsDict['name']=topic
         self.subsDict['fn']= handler
@@ -105,11 +105,22 @@ class rosNode:
         handler = item['hdl'] 
         handler.publish(data)
         
-    def unsubscribe(self,topic):
+    def update(self,topic):
         for item in self.new.subscribeTopics:
             if item['name'] is topic:
                 break
+        self.__createSubscriber(item)
+        
+    def unsubscribe(self,topic):
+        i=0
+        for item in self.new.subscribeTopics:
+            if item['name'] is topic:
+                break
+            i=i+1
+            
         handler = item['hdl'] 
+        self.new.subscribeTopics.pop(i)
+        
         handler.unregister()
         
     
@@ -153,22 +164,23 @@ class rosNode:
             item['hdl'] = hnd
             #pair = {'publisher':pub,'topic':topic}
             #self.publisher.append(pair) 
-                                   
+  
+    def __createSubscriber(self,item):
+        topic = item['name']
+        fn = item['fn']
+        msg = item['msg']
+        
+        subs = subscriber()
+        subs.registerReadFn(fn)
+        hndl = subs.subscribeTo(topic, msg)
+        item['hdl'] = hndl                                      
     
     def __createNewSubscribers(self):
         for item in self.new.subscribeTopics:
             if item == None:
                 print"error: empty list of new publishers"
                 return
-            
-            topic = item['name']
-            fn = item['fn']
-            msg = item['msg']
-            
-            subs = subscriber()
-            subs.registerReadFn(fn)
-            hndl = subs.subscribeTo(topic, msg)
-            item['hdl'] = hndl
+            self.__createSubscriber(item)
             
             #pair = {'subscriber':subs,'topic':topic} 
             #self.subscriber.append(pair)    

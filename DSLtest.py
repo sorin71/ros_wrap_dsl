@@ -19,9 +19,8 @@ from std_msgs.msg import String
 nd = rosNode("NewNode")
 
 def myCoolFn(data):
-    msg = 'from the cool fn: ' + data
-    print("myCoolFn received: {} but sending: {}".format(data,msg))
-    nd.write('onTopic1', msg )
+    print("myCoolFn received: {}".format(data))
+    nd.write('onTopic1', data )
     
 def myFn1(data):
     print("myFn1 received: {}, sending it".format(data))
@@ -58,6 +57,7 @@ nd.unsubscribe("inTopic1")
 
 variable = raw_input("press enter for changing the handler function for inTopic1")
 nd.new.subscribe(topic = "inTopic1",handler = myCoolFn, msgType = String)
+nd.update("inTopic1")
 
 print "myCoolFn is active for inTopic1"
 #nd.onTopic("onTopic1").publish("test message")
