@@ -5,6 +5,9 @@ import types
 from rospy.msg import AnyMsg
  
 from rosObjects import subscriber, publisher, node
+#reload(subscriber)
+#reload(publisher)
+#reload(node)
 
 class topicHandler:
     
@@ -37,13 +40,13 @@ class topicHandler:
             if msgType is not None or handler is not None:
                 print ("error: subscribe reuse should have a handler and a msgType provided: ")       
                 print "topic: ", topic
-            
+            self.subsDict['msg']=AnyMsg #prepare message for relaying
         else:
        
             if msgType is None or handler is None:
                 print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
                 print "topic: ", topic
-                self.subsDict['msg']=AnyMsg
+            
 
         elem = self.subsDict.copy()
         self.subscribeTopics.append(elem)
@@ -143,8 +146,8 @@ class rosNode:
             
             topic = item['name']
             fn = self.reuse.relayFn
-            msg = AnyMsg
-            #msg = item['msg']
+            #msg = AnyMsg
+            msg = item['msg']
             
             subs = subscriber()
             subs.registerReadFn(fn)

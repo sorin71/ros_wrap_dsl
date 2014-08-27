@@ -12,6 +12,7 @@ sys.path.append("/home/sorin/roswork_FRSC2014/src/EnhanceRosNode")
 #print sys.path
 
 from RosNode import rosNode
+#reload(rosNode)
 
 from std_msgs.msg import String
 
