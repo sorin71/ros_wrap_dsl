@@ -28,14 +28,16 @@ class subscriber():
     def subscribeTo(self,topic,msgType):
         self.subscribedTopic = topic
         self.subscribedMsgType = msgType
-        rospy.Subscriber(self.subscribedTopic, self.subscribedMsgType, self.callBackFn)
+        subsHnd = rospy.Subscriber(self.subscribedTopic, self.subscribedMsgType, self.callBackFn)
+        return subsHnd
  
     def registerReadFn(self,fn):
         self.callBackFn = fn
         
     def updateSubscribeFn(self):
         if self.callBackFn != None:
-            rospy.Subscriber(self.subscribedTopic, self.subscribedMsgType, self.callBackFn)
+            subsHnd = rospy.Subscriber(self.subscribedTopic, self.subscribedMsgType, self.callBackFn)
+            return subsHnd
         else:
             print "A callback function must be registered first (use registerReadFn)"
     
@@ -62,7 +64,7 @@ class publisher():
     def registerToPublish(self,topic,msgType): 
         self.publishingTopic = topic
         self.publishingMsgType = msgType
-        self.handler = rospy.Publisher(self.publishingTopic, self.publishingMsgType)
+        self.handler = rospy.Publisher(self.publishingTopic, self.publishingMsgType, queue_size= 10)
         return self.handler
    
     def write(self,data):
@@ -75,10 +77,7 @@ class publisher():
         self.relayHandler = relayHandler
 
     def relayFn(self,data):
-        #if self.relayHandler is None:
-        #    print "error: setRelayPublHandler should be called before relayFn"
-        #    return
-        print "received data on topic ", self.publishingTopic, " sending it further..."
+        #print "received data on topic ", self.publishingTopic, " sending it further..."
         self.write(data)
         #self.relayHandler.publish(data)
    

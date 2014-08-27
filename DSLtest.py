@@ -18,25 +18,18 @@ from std_msgs.msg import String
 
 nd = rosNode("NewNode")
 
-def myFn(data):
-    print("received: {}, sending it".format(data))
-    nd.write(data)
+def myCoolFn(data):
+    msg = 'from the cool fn: ' + data
+    print("myCoolFn received: {} but sending: {}".format(data,msg))
+    nd.write('onTopic1', msg )
     
 def myFn1(data):
-    print("received: {}, sending it".format(data))
-    nd.write(data)
+    print("myFn1 received: {}, sending it".format(data))
+    nd.write('onTopic1',data)
     
 def myFn2(data):
-    print("received: {}, sending it".format(data))
-    nd.write(data)
-
-    
-def myRunFn():
-    nd.read()
-    print "run "
-        
-def myNewRun():
-    print "new"
+    print("myFn2 received: {}, sending it".format(data))
+    nd.write('onTopic2',data)   
 
 
 nd.basePackage("NodePackage")\
@@ -58,6 +51,15 @@ nd.new.subscribe(topic = "inTopic1",handler = myFn1, msgType = String)
 
 nd.create()
 
+variable = raw_input("press enter for unsubscribe from inTopic1")
+
+#replace a subscribed topic handler
+nd.unsubscribe("inTopic1")
+
+variable = raw_input("press enter for changing the handler function for inTopic1")
+nd.new.subscribe(topic = "inTopic1",handler = myCoolFn, msgType = String)
+
+print "myCoolFn is active for inTopic1"
 #nd.onTopic("onTopic1").publish("test message")
   
 #nd.printNode()
