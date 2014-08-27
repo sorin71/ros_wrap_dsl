@@ -107,7 +107,7 @@ class rosNode:
             
             topic = item['name']
             msgType = item['msg']
-            print "topic", topic
+            #print "topic", topic
             pub = publisher()
             hnd = pub.registerToPublish(topic,msgType)
             pub.pub= hnd
@@ -130,36 +130,42 @@ class rosNode:
             subs.subscribeTo(topic, msg)
             
             pair = {'subscriber':subs,'topic':topic} 
-            self.subscriber.append(pair)                                   
-     
-    def __relayPublishers(self):
-        for item in self.reuse.publishTopics:
-            #print item
-            #AnyMsg
-            pass
+            self.subscriber.append(pair)    
             
-    def __relaySubscribers(self):
-        for item in self.reuse.subscribeTopics:
-            #print item
+    def __relay(self, subscribingTo, pubishingTo, msgType):                               
             subs = subscriber()
             publ = publisher()
                              
-            subsTopic = item['name']
-            publTopic = self.genRelayTopic(subsTopic)
-            msg = item['msg']
+            publTopic = pubishingTo
+            subsTopic = subscribingTo
+            msg = msgType
             fn = publ.relayFn
-            
+            #fn = publ.write
             
             publHandler = publ.registerToPublish(publTopic, msg)
-            #publTopic.setRelayPublHandler
             subs.registerReadFn(fn)
             print "debug: ", publTopic, msg, fn
             subs.subscribeTo(subsTopic, msg)
             
-            dictItems = {'subscriber':subs,'topic':subsTopic, 'out_topic':publTopic} 
+            dictItems = {'subscriber':subs,'in_topic':subsTopic, 'out_topic':publTopic} 
             self.subscriber.append(dictItems)                                   
-
-    
+     
+    def __relayPublishers(self):
+        for item in self.reuse.publishTopics:
+            #print item
+            publTopic = item['name']
+            subsTopic = self.genRelayTopic(publTopic)
+            msg = item['msg']
+            self.__relay(subsTopic, publTopic, msg)                             
+            
+    def __relaySubscribers(self):
+        for item in self.reuse.subscribeTopics:
+            #print item
+            subsTopic = item['name']
+            publTopic = self.genRelayTopic(subsTopic)
+            msg = item['msg']
+            self.__relay(subsTopic, publTopic, msg)                             
+   
     def create(self):
         self.node.createNode(self.newRosNodeName)         
         self.__createNewPublishers()   
