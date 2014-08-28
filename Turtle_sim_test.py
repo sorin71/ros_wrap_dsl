@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Aug 23 17:44:42 2014
+Created on Thur Aug 28 16:55:45 2014
 
 @author: sorin
 """
-#execfile('/home/sorin/roswork_FRSC2014/src/EnhanceRosNode/DSLtest.py')
+#execfile('/home/sorin/roswork_FRSC2014/src/EnhanceRosNode/Turtle_sim_test.py')
 
 import sys
 sys.path.append("/home/sorin/roswork_FRSC2014/src/EnhanceRosNode")
@@ -14,9 +14,11 @@ sys.path.append("/home/sorin/roswork_FRSC2014/src/EnhanceRosNode")
 from RosNode import rosNode
 #reload(rosNode)
 
-from std_msgs.msg import String
+from geometry_msgs.msg import Twist
+from turtlesim.msg import Color, Pose
 
-nd = rosNode("NewNode")
+
+nd = rosNode("super_turtlesim_node")
 
 def myCoolFn(data):
     print("myCoolFn received: {}".format(data))
@@ -31,22 +33,24 @@ def myFn2(data):
     nd.write('onTopic2',data)   
 
 
-nd.basePackage("NodePackage")\
-  .baseNode("BaseNode") 
+nd.basePackage("turtlesim")\
+  .baseNode("turtlesim_node") 
   
 {
-nd.reuse.subscribe(topic = "irTopic1",msgType = String)
-        .subscribe(topic = "irTopic2",msgType = String)
-        .publish(topic = "orTopic1",msgType = String)
-        .publish(topic = "orTopic2",msgType = String)
+nd.reuse.subscribe(topic = "turtle1/cmd_vel",msgType = Twist)
+        .publish(topic = "turtle1/color_sensor",msgType = Color)
+        .publish(topic = "turtle1/pose",msgType = Pose)
 }
 
-{
-nd.new.subscribe(topic = "inTopic1",handler = myFn1, msgType = String)
-      .subscribe(topic = "inTopic2",handler = myFn2, msgType = String)
-      .publish(topic = "onTopic1", msgType = String)
-      .publish(topic = "onTopic2", msgType = String)
-}
+#{
+#nd.new.subscribe(topic = "inTopic1",handler = myFn1, msgType = String)
+#      .subscribe(topic = "inTopic2",handler = myFn2, msgType = String)
+#      .publish(topic = "onTopic1", msgType = String)
+#      .publish(topic = "onTopic2", msgType = String)
+#}
+
+#p = Popen("/home/sorin/roswork_FRSC2014/devel/setup.sh", shell=True, stdin=PIPE)
+#p.communicate(cmdLine
 
 nd.create()
 

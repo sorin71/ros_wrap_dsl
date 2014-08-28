@@ -3,9 +3,14 @@
 import types
 
 from rospy.msg import AnyMsg
+#import threading
 #from std_msgs.msg import String
  
 from rosObjects import subscriber, publisher, node
+from subprocess import call
+from subprocess import Popen, PIPE
+#from subprocess import communicate
+#from subprocess import wait
 #reload(subscriber)
 #reload(publisher)
 #reload(node)
@@ -67,7 +72,10 @@ class topicHandler:
 
         return self
 
-
+def externalNodeLaunch(cmdLine):
+    call(cmdLine , shell=True)
+    #call("rosrun turtlesim turtlesim_node" , shell=True)
+    
 class rosNode:
     'Common base class for ROS node and sub-node'
           
@@ -80,7 +88,7 @@ class rosNode:
         self.publisher = []
         self.subscriber = []
         #self.publHandler = {'Topic': None,'Handler': None}
-        self.node = node()        
+        self.node = node()   
         
 
     def __init__(self, newRosNodeName):
@@ -203,17 +211,52 @@ class rosNode:
             hndl = self.__relay(subsTopic, publTopic, msg) 
             item['hdl'] = hndl      
             
+    def __generateCmdLine(self):
+        #rosrun <package> <executable>
+        #rename __name:=new_name
+        cmdLine = '"'
+        cmdLine += 'rosrun ' + self.baseRosPackage + " " + self.baseRosNodeName + " "     
+        #remap the publishing topics
+        for item in self.reuse.publishTopics:
+            topic = item['name']
+            renamed = self.__genRelayTopic(topic)       
+            cmdLine += topic + " := " + renamed + " "
+        #remap the subscribe topics
+        for item in self.reuse.subscribeTopics:
+            topic = item['name']
+            renamed = self.__genRelayTopic(topic)
+            cmdLine += topic + " := " + renamed + " " 
+        #cmdLine += ' "'
+        print cmdLine
+        return cmdLine
+  
     def __launchBaseNode(self):     
+        rosCmdLine = self.__generateCmdLine()
         
-        pass                 
-   
+        #the below trick requires to include the following code at the end of ~/.bashrc:
+        #    eval "$BASH_POST_RC"
+        
+        termCmdLine = "BASH_POST_RC=\''sdu;" + rosCmdLine + "'\''; exec bash'"
+        
+        
+        
+        call(['gnome-terminal', '-x', 'sh', '-c', "BASH_POST_RC=\''sdu; rosrun turtlesim turtlesim_node '\''; exec bash'"])
+        #externalNodeLaunch(cmdLine)
+        
+        #call(cmdLine , shell=True)
+        #p = Popen("/home/sorin/roswork_FRSC2014/devel/setup.sh", shell=True, stdin=PIPE)
+        #p.communicate(cmdLine)
+        #t = threading.Thread(target=self.__cmdLineFn, shell=True)
+        #t.start()
+                
     def create(self):
         self.node.createNode(self.newRosNodeName)         
         self.__createNewPublishers()   
         self.__createNewSubscribers()
         self.__relayPublishers()
         self.__relaySubscribers() 
-        self.__launchBaseNode()
+        if self.baseRosNodeName is not None:
+            self.__launchBaseNode()
         
                
 
