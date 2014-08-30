@@ -8,7 +8,8 @@ from rospy.msg import AnyMsg
  
 from rosObjects import subscriber, publisher, node
 from subprocess import call
-from subprocess import Popen, PIPE
+from os import environ
+#from subprocess import Popen, PIPE
 #from subprocess import communicate
 #from subprocess import wait
 #reload(subscriber)
@@ -20,6 +21,7 @@ class topicHandler:
     def __init__(self, type):
         self.subscribeTopics = []
         self.publishTopics = []
+        self.updateNode = False
         #self.relayHandler = None
         self.subsDict = {'name': None,'msg': None,'type':type,'fn': None, 'hdl': None}
         self.publDict = {'name': None,'msg': None,'type':type,'hdl': None}
@@ -29,7 +31,32 @@ class topicHandler:
         else:
             print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type)) 
 
-    def subscribe(self,topic,handler = None, msgType = None ):    
+    def delayedUpdate(self,delayed):
+        self.updateNode = not delayed
+        
+    def __createSubscriber(self,item):
+        topic = item['name']
+        fn = item['fn']
+        msg = item['msg']
+        
+        subs = subscriber()
+        subs.registerReadFn(fn)
+        hndl = subs.subscribeTo(topic, msg)
+        item['hdl'] = hndl                               
+        
+    def subscribe(self,topic,handler = None, msgType = None ):   
+
+        if self.updateNode is True:
+            i=0
+            item = None
+            for item in self.subscribeTopics:
+                if item['name'] is topic:
+                    break
+                i=i+1
+            
+            if item is not None:   
+                self.subscribeTopics.pop(i)
+ 
        
         self.subsDict['name']=topic
         self.subsDict['fn']= handler
@@ -46,9 +73,15 @@ class topicHandler:
             print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
             print "topic: ", topic
             
+        if self.updateNode is True:
+            subs = subscriber()
+            subs.registerReadFn(handler)
+            hndl = subs.subscribeTo(topic, msgType)
+            self.subsDict['hdl'] = hndl                               
 
         elem = self.subsDict.copy()
         self.subscribeTopics.append(elem)
+
 
         return self   
   
@@ -89,6 +122,7 @@ class rosNode:
         self.subscriber = []
         #self.publHandler = {'Topic': None,'Handler': None}
         self.node = node()   
+        self.created = False
         
 
     def __init__(self, newRosNodeName):
@@ -153,6 +187,7 @@ class rosNode:
         
         dictItems = {'subscriber':hndl,'in_topic':subsTopic, 'out_topic':publTopic} 
         self.subscriber.append(dictItems) 
+        
         return hndl                                  
      
 
@@ -186,9 +221,10 @@ class rosNode:
     def __createNewSubscribers(self):
         for item in self.new.subscribeTopics:
             if item == None:
-                print"error: empty list of new publishers"
+                print"error: empty list of new subscribers"
                 return
             self.__createSubscriber(item)
+            
             
             #pair = {'subscriber':subs,'topic':topic} 
             #self.subscriber.append(pair)    
@@ -214,18 +250,19 @@ class rosNode:
     def __generateCmdLine(self):
         #rosrun <package> <executable>
         #rename __name:=new_name
-        cmdLine = '"'
+        #cmdLine = '"'
+        cmdLine = ''
         cmdLine += 'rosrun ' + self.baseRosPackage + " " + self.baseRosNodeName + " "     
         #remap the publishing topics
         for item in self.reuse.publishTopics:
             topic = item['name']
             renamed = self.__genRelayTopic(topic)       
-            cmdLine += topic + " := " + renamed + " "
+            cmdLine += topic + ":=" + renamed + " "
         #remap the subscribe topics
         for item in self.reuse.subscribeTopics:
             topic = item['name']
             renamed = self.__genRelayTopic(topic)
-            cmdLine += topic + " := " + renamed + " " 
+            cmdLine += topic + ":=" + renamed + " " 
         #cmdLine += ' "'
         print cmdLine
         return cmdLine
@@ -236,11 +273,26 @@ class rosNode:
         #the below trick requires to include the following code at the end of ~/.bashrc:
         #    eval "$BASH_POST_RC"
         
-        termCmdLine = "BASH_POST_RC=\''sdu;" + rosCmdLine + "'\''; exec bash'"
+        #termCmdLine = '"'+"BASH_POST_RC=\''sdu;" + rosCmdLine + "'\''; exec bash'" + '"'
+        
+        #termCmdLine = "'BASH_POST_RC=\''sdu; rosrun rospy_tutorials talker chatter:=/relay_chatter '\''; exec bash''"
         
         
+        environ["BASH_POST_RC"] = 'sdu'
+        print environ["BASH_POST_RC"]
         
-        call(['gnome-terminal', '-x', 'sh', '-c', "BASH_POST_RC=\''sdu; rosrun turtlesim turtlesim_node '\''; exec bash'"])
+        #cmd = "rosrun rospy_tutorials talker chatter:=/relay_chatter "
+        #call(['gnome-terminal', '-x', 'sh', '-c', rosCmdLine])
+
+        
+        print rosCmdLine
+        call(['gnome-terminal', '-x', 'sh', '-c',rosCmdLine])
+        
+        #call(['gnome-terminal', '-x', 'sh', '-c', "BASH_POST_RC=\''sdu; rosrun turtlesim turtlesim_node '\''; exec bash'"])
+        #call(['gnome-terminal', '-x', 'sh', '-c', string(termCmdLine]))
+        #call(['gnome-terminal', '-x', 'sh', '-c', "BASH_POST_RC=\''sdu; rosrun rospy_tutorials talker chatter:=/relay_chatter '\''; exec bash'"])
+        #rosrun rospy_tutorials talker chatter:=/wg/chatter
+        #call(['gnome-terminal', '-x', 'sh', '-c', "BASH_POST_RC=\''sdu;rosrun turtlesim turtlesim_node turtle1/color_sensor := relay_turtle1/color_sensor turtle1/pose := relay_turtle1/pose turtle1/cmd_vel := relay_turtle1/cmd_vel '\''; exec bash'"])
         #externalNodeLaunch(cmdLine)
         
         #call(cmdLine , shell=True)
@@ -257,6 +309,10 @@ class rosNode:
         self.__relaySubscribers() 
         if self.baseRosNodeName is not None:
             self.__launchBaseNode()
+        #from now on, any new topic change will take effect right away
+        #self.new.updateNode = True
+        self.new.delayedUpdate(False)
+
         
                
 
