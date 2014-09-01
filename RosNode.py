@@ -23,11 +23,11 @@ class topicHandler:
         self.publishTopics = []
         self.updateNode = False
         #self.relayHandler = None
-        self.subsDict = {'name': None,'msg': None,'type':type,'fn': None, 'hdl': None}
-        self.publDict = {'name': None,'msg': None,'type':type,'hdl': None}
+        self.itemDict = {'name': None,'msg': None,'type':type,'fn': None, 'hdl': None}
+        #self.itemDict = {'name': None,'msg': None,'type':type,'hdl': None}
 
         if type == 'reuse' or type == 'new':
-            self.subsDict['type'] = type
+            self.itemDict['type'] = type
         else:
             print ("error: the node type could only be '''new''' or '''reuse'''; passed: '''{}'''".format(type)) 
 
@@ -58,16 +58,17 @@ class topicHandler:
                 self.subscribeTopics.pop(i)
  
        
-        self.subsDict['name']=topic
-        self.subsDict['fn']= handler
-        self.subsDict['msg']=msgType
+        self.itemDict['name']=topic
+        self.itemDict['fn']= handler
+        self.itemDict['msg']=msgType
         
-        if self.subsDict['type']=='reuse':
+        if self.itemDict['type']=='reuse':
+            pass
             #if msgType is not None or handler is not None:
-            if  handler is not None:
-                print ("error: subscribe reuse should have a handler and a msgType provided: ")       
-                print "topic: ", topic
-            #self.subsDict['msg']=AnyMsg #prepare message for relaying
+        #    if  handler is not None:
+        #        print ("error: subscribe reuse should have a handler and a msgType provided: ")       
+        #        print "topic: ", topic
+            #self.itemDict['msg']=AnyMsg #prepare message for relaying
                
         elif msgType is None or handler is None:
             print ("error: subscribe new has no handler or msgType; provided: {} {}".format(handler, msgType ))       
@@ -77,9 +78,9 @@ class topicHandler:
             subs = subscriber()
             subs.registerReadFn(handler)
             hndl = subs.subscribeTo(topic, msgType)
-            self.subsDict['hdl'] = hndl                               
+            self.itemDict['hdl'] = hndl                               
 
-        elem = self.subsDict.copy()
+        elem = self.itemDict.copy()
         self.subscribeTopics.append(elem)
 
 
@@ -87,10 +88,10 @@ class topicHandler:
   
     def publish(self,topic, msgType = None):
               
-        self.publDict['name']=topic
-        self.publDict['msg']=msgType
+        self.itemDict['name']=topic
+        self.itemDict['msg']=msgType
         
-        if self.publDict['type']=='new':
+        if self.itemDict['type']=='new':
             
             if msgType == None:
                 print ("error: publish new should have a msgType provided: ")       
@@ -98,9 +99,9 @@ class topicHandler:
         #else: 
             #if msgType is not None:
             #    print ("error: publish reuse has no msgType; provided: {} ".format(msgType))       
-            #self.publDict['msg'] = AnyMsg
+            #self.itemDict['msg'] = AnyMsg
             
-        elem = self.publDict.copy()
+        elem = self.itemDict.copy()
         self.publishTopics.append(elem)
 
         return self
@@ -169,14 +170,17 @@ class rosNode:
     def __genRelayTopic(self,topic):
         return 'relay_' + topic
   
-    def __relay(self, subscribingTo, pubishingTo, msgType):                               
+    def __relay(self, subscribingTo, pubishingTo, msgType,relFn = None):                               
         subs = subscriber()
         publ = publisher()
                          
         publTopic = pubishingTo
         subsTopic = subscribingTo
         msg = msgType
-        fn = publ.relayFn
+        if relFn is None:
+            fn = publ.relayFn
+        else:
+            fn = relFn
         #fn = publ.write
         
         publHandler = publ.registerToPublish(publTopic, msg)
@@ -185,7 +189,7 @@ class rosNode:
         hndl = subs.subscribeTo(subsTopic, msg)
         
         
-        dictItems = {'subscriber':hndl,'in_topic':subsTopic, 'out_topic':publTopic} 
+        dictItems = {'subscriber':hndl,'in_topic':subsTopic, 'out_topic':publTopic, 'fn':fn} 
         self.subscriber.append(dictItems) 
         
         return hndl                                  
@@ -235,7 +239,8 @@ class rosNode:
             publTopic = item['name']
             subsTopic = self.__genRelayTopic(publTopic)
             msg = item['msg']
-            hndl = self.__relay(subsTopic, publTopic, msg) 
+            relFn = item['fn']
+            hndl = self.__relay(subsTopic, publTopic, msg, relFn) 
             item['hdl'] = hndl                             
             
     def __relaySubscribers(self):
@@ -244,7 +249,8 @@ class rosNode:
             subsTopic = item['name']
             publTopic = self.__genRelayTopic(subsTopic)
             msg = item['msg']
-            hndl = self.__relay(subsTopic, publTopic, msg) 
+            relFn = item['fn']
+            hndl = self.__relay(subsTopic, publTopic, msg , relFn) 
             item['hdl'] = hndl      
             
     def __generateCmdLine(self):
