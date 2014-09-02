@@ -106,10 +106,11 @@ class topicHandler:
 
         return self
 
-def externalNodeLaunch(cmdLine):
-    call(cmdLine , shell=True)
+#def externalNodeLaunch(cmdLine):
+#    call(cmdLine , shell=True)
     #call("rosrun turtlesim turtlesim_node" , shell=True)
-    
+ 
+       
 class rosNode:
     'Common base class for ROS node and sub-node'
           
@@ -121,6 +122,7 @@ class rosNode:
         self.new = topicHandler('new')
         self.publisher = []
         self.subscriber = []
+        self.params = []
         #self.publHandler = {'Topic': None,'Handler': None}
         self.node = node()   
         self.created = False
@@ -137,6 +139,13 @@ class rosNode:
     def baseNode(self, baseRosNodeName):
         self.baseRosNodeName = baseRosNodeName
         return self 
+    
+    def parameter(self, parameter, value):
+        pair = {"param":'', "val":None}
+        pair["param"] = parameter
+        pair["val"] = value
+        self.params.append(pair)
+        
     
     #def read(self,topic): #not needed, the callback function is doing that
     #    pass
@@ -270,6 +279,12 @@ class rosNode:
             renamed = self.__genRelayTopic(topic)
             cmdLine += topic + ":=" + renamed + " " 
         #cmdLine += ' "'
+        #add the parameter changes
+        for item in self.params:
+            param = item['param']
+            val = item['val']
+            cmdLine += param + ":=" + val + " " 
+        
         print cmdLine
         return cmdLine
   

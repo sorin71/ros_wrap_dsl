@@ -42,11 +42,11 @@ from RosNode import rosNode
 #from std_msgs.msg import Bool
 #from kobuki_msgs.msg import MotorPower
 #from nav_msgs.msg import Odometry
-#from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist
 
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseArray
-from nav_msgs.msg import Odometry
-from tf2_msgs.msg import TFMessage
+#from geometry_msgs.msg import PoseWithCovarianceStamped, PoseArray
+#from nav_msgs.msg import Odometry
+#from tf2_msgs.msg import TFMessage
 
 
 def myCoolFn(data):
@@ -61,18 +61,13 @@ def myFn2(data):
     print("myFn2 received: {}, sending it".format(data))
     nd.write('onTopic2',data)   
 
-nd = rosNode("fake_localization_supernode")
+nd = rosNode("enhanced_move_base")
 
-nd.basePackage("fake_localization")\
-  .baseNode("fake_localization") 
+nd.basePackage("move_base")\
+  .baseNode("move_base") 
   
 {
- nd.reuse.publish(topic = "amcl_pose",msgType = PoseWithCovarianceStamped)
-         .publish(topic = "particlecloud", msgType = PoseArray)
-         .publish(topic = "tf", msgType = TFMessage)
-         .subscribe(topic = "base_pose_ground_truth",handler = myFn2, msgType = Odometry)
-         .subscribe(topic = "tf",msgType = TFMessage)
-         .subscribe(topic = "tf_static", msgType = TFMessage)
+ nd.reuse.publish(topic = "cmd_vel",msgType = Twist)
 }
 
 nd.create()
