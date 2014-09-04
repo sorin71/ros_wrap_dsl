@@ -267,7 +267,7 @@ class rosNode:
         #rename __name:=new_name
         #cmdLine = '"'
         cmdLine = ''
-        cmdLine += 'rosrun ' + self.baseRosPackage + " " + self.baseRosNodeName + " "     
+        cmdLine += 'rosrun ' + self.baseRosPackage + " " + self.baseRosNodeName + " " + " __name:=" + self.baseRosNodeName + " " 
         #remap the publishing topics
         for item in self.reuse.publishTopics:
             topic = item['name']
@@ -355,4 +355,12 @@ class rosNode:
 
 
 #call(["rosrun " + NewNode.baseRosPackage + " " + NewNode.baseRosNodeName, ""])
+
+#----------------------------------------------------------------- import roslib
+#---------------------------------------------- roslib.load_manifest("rosparam")
+#--------------------------------------------------------------- import rosparam
+#------------------------------------------------------------------------------ 
+# paramlist=rosparam.load_file("/path/to/myfile",default_namespace="my_namespace")
+#-------------------------------------------------- for params, ns in paramlist:
+    #----------------------------------------- rosparam.upload_params(ns,params)
 
